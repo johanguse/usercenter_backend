@@ -7,50 +7,52 @@ from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.core.database import SessionLocal
 from app.models.training import ModelStatus, TrainingData
+from app.schemas.training import TrainingDataCreate
 
 celery_app = Celery('tasks', broker=settings.CELERY_BROKER_URL)
 
-
-async def store_training_data(db: Session, data):
+async def store_training_data(db: Session, data: TrainingDataCreate):
     db_data = TrainingData(
-        user_id=data.user_id, bot_id=data.bot_id, data=data.data
+        user_id=data.user_id,
+        bot_id=data.bot_id,
+        data=data.data,
+        status=ModelStatus.TRAINING
     )
     db.add(db_data)
     db.commit()
-
+    db.refresh(db_data)
+    return db_data
 
 def trigger_training_job(user_id: int, bot_id: int):
     train_model.delay(user_id, bot_id)
-
 
 @celery_app.task
 def train_model(user_id: int, bot_id: int):
     # This function would trigger your model training pipeline
     # For now, it's a placeholder
-
     time.sleep(10)  # Simulating training time
-    # Update model status in database
+    
     db = SessionLocal()
-    status = (
-        db.query(ModelStatus)
-        .filter(ModelStatus.user_id == user_id, ModelStatus.bot_id == bot_id)
-        .first()
-    )
-    if status:
-        status.status = 'Trained'
-    else:
-        status = ModelStatus(user_id=user_id, bot_id=bot_id, status='Trained')
-        db.add(status)
-    db.commit()
-    db.close()
-
+    try:
+        training_data = (
+            db.query(TrainingData)
+            .filter(TrainingData.user_id == user_id, TrainingData.bot_id == bot_id)
+            .order_by(TrainingData.created_at.desc())
+            .first()
+        )
+        if training_data:
+            training_data.status = ModelStatus.COMPLETED
+            db.commit()
+    finally:
+        db.close()
 
 async def get_model_status(db: Session, user_id: int, bot_id: int):
-    status = (
-        db.query(ModelStatus)
-        .filter(ModelStatus.user_id == user_id, ModelStatus.bot_id == bot_id)
+    training_data = (
+        db.query(TrainingData)
+        .filter(TrainingData.user_id == user_id, TrainingData.bot_id == bot_id)
+        .order_by(TrainingData.created_at.desc())
         .first()
     )
-    if not status:
+    if not training_data:
         raise HTTPException(status_code=404, detail='Model not found')
-    return status.status
+    return training_data.status.value

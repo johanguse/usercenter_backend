@@ -16,11 +16,13 @@ class UserCreate(UserBase):
 class UserUpdate(UserBase):
     password: Optional[str] = None
     is_active: Optional[bool] = None
+    role: Optional[str] = None
 
 
 class UserInDBBase(UserBase):
     id: int
     is_active: bool
+    role: str
     created_at: datetime
     updated_at: datetime
 
@@ -38,10 +40,14 @@ class Token(BaseModel):
     token_type: str
 
 
-class CompanyBase(BaseModel):
+class TeamBase(BaseModel):
     id: int
     name: str
 
 
-class UserWithCompanies(User):
-    companies: List[CompanyBase] = []
+class UserWithTeams(User):
+    teams: List[TeamBase] = []
+
+
+class UserInDB(UserInDBBase):
+    hashed_password: str
