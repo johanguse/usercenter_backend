@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.core.database import Base, engine, get_db
-from app.routers import user
+from app.routers import user, team, project, training
 
 app = FastAPI(title='AI Chat SaaS API', version='1.0.0')
 
@@ -31,8 +31,10 @@ add_pagination(app)
 
 Base.metadata.create_all(bind=engine)
 
-app.include_router(user.router, prefix=settings.API_V1_STR)
-
+app.include_router(user.router, prefix=f"{settings.API_V1_STR}/users", tags=["users"])
+app.include_router(team.router, prefix=f"{settings.API_V1_STR}/teams", tags=["teams"])
+app.include_router(project.router, prefix=f"{settings.API_V1_STR}/projects", tags=["projects"])
+app.include_router(training.router, prefix=f"{settings.API_V1_STR}/training", tags=["training"])
 
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request, exc):

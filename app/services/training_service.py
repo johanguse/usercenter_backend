@@ -1,58 +1,69 @@
-import time
-
-from celery import Celery
-from fastapi import HTTPException
 from sqlalchemy.orm import Session
-
-from app.core.config import settings
-from app.core.database import SessionLocal
-from app.models.training import ModelStatus, TrainingData
+from app.models.team_member import TeamMember
+from app.models.team import Team
+from app.models.user import User
+from app.models.training import TrainingData, ModelStatus
 from app.schemas.training import TrainingDataCreate
+from app.utils.storage import upload_file_to_r2
+from app.services import activity_log_service
+import uuid
 
-celery_app = Celery('tasks', broker=settings.CELERY_BROKER_URL)
+async def store_training_data(db: Session, data: TrainingDataCreate, file_content: bytes, user: User, ip_address: str):
+    # Generate a unique file name
+    file_extension = data.file_name.split('.')[-1]
+    unique_filename = f"{uuid.uuid4()}.{file_extension}"
+    
+    # Upload file to R2
+    file_url = upload_file_to_r2(file_content, unique_filename, data.content_type)
+    
+    if not file_url:
+        raise ValueError("Failed to upload file to R2")
 
-async def store_training_data(db: Session, data: TrainingDataCreate):
+    # Store metadata in database
     db_data = TrainingData(
-        user_id=data.user_id,
-        bot_id=data.bot_id,
-        data=data.data,
+        project_id=data.project_id,
+        file_url=file_url,
         status=ModelStatus.TRAINING
     )
     db.add(db_data)
     db.commit()
     db.refresh(db_data)
+
+    # Log the activity
+    activity_log_service.log_activity(
+        db, 
+        data.project_id, 
+        user, 
+        f"Uploaded training data: {unique_filename}",
+        ip_address
+    )
+
     return db_data
 
-def trigger_training_job(user_id: int, bot_id: int):
-    train_model.delay(user_id, bot_id)
-
-@celery_app.task
-def train_model(user_id: int, bot_id: int):
-    # This function would trigger your model training pipeline
-    # For now, it's a placeholder
-    time.sleep(10)  # Simulating training time
-    
-    db = SessionLocal()
-    try:
-        training_data = (
-            db.query(TrainingData)
-            .filter(TrainingData.user_id == user_id, TrainingData.bot_id == bot_id)
-            .order_by(TrainingData.created_at.desc())
-            .first()
-        )
-        if training_data:
-            training_data.status = ModelStatus.COMPLETED
-            db.commit()
-    finally:
-        db.close()
-
-async def get_model_status(db: Session, user_id: int, bot_id: int):
+async def get_model_status(db: Session, project_id: int, user: User, ip_address: str):
     training_data = (
         db.query(TrainingData)
-        .filter(TrainingData.user_id == user_id, TrainingData.bot_id == bot_id)
+        .filter(TrainingData.project_id == project_id)
         .order_by(TrainingData.created_at.desc())
         .first()
     )
     if not training_data:
-        raise HTTPException(status_code=404, detail='Model not found')
-    return training_data.status.value
+        raise ValueError('No training data found for this project')
+
+    # Log the activity
+    activity_log_service.log_activity(
+        db, 
+        project_id, 
+        user, 
+        f"Checked model status: {training_data.status.value}",
+        ip_address
+    )
+
+    return training_data.status.value, training_data.file_url
+
+def is_team_member(db: Session, team: Team, user: User) -> bool:
+    team_member = db.query(TeamMember).filter(
+        TeamMember.team_id == team.id,
+        TeamMember.user_id == user.id
+    ).first()
+    return team_member is not None

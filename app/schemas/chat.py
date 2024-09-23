@@ -1,11 +1,17 @@
+from datetime import datetime
 from pydantic import BaseModel
 
-
-class ChatMessage(BaseModel):
+class ChatMessageCreate(BaseModel):
+    project_id: int
     user_id: int
-    bot_id: int
     message: str
 
+class ChatMessage(ChatMessageCreate):
+    id: int
+    timestamp: datetime
+
+    class Config:
+        from_attributes = True
 
 class ChatResponse(BaseModel):
     response: str

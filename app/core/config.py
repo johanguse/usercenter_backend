@@ -31,6 +31,14 @@ class Settings(BaseSettings):
 
     DATABASE_URL: Union[str, PostgresDsn]
 
+    RESEND_API_KEY: str = os.getenv('RESEND_API_KEY')
+    RESEND_FROM_EMAIL: str = os.getenv('RESEND_FROM_EMAIL')
+
+    R2_ENDPOINT_URL: str = os.getenv('R2_ENDPOINT_URL')
+    R2_ACCESS_KEY_ID: str = os.getenv('R2_ACCESS_KEY_ID')
+    R2_SECRET_ACCESS_KEY: str = os.getenv('R2_SECRET_ACCESS_KEY')
+    R2_BUCKET_NAME: str = os.getenv('R2_BUCKET_NAME')
+
     class Config:
         case_sensitive = True
         env_file = '.env'

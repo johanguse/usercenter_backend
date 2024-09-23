@@ -19,3 +19,4 @@ class Team(Base):
     team_members = relationship("TeamMember", back_populates="team")
     activity_logs = relationship("ActivityLog", back_populates="team")
     invitations = relationship("Invitation", back_populates="team")
+    projects = relationship("Project", back_populates="team")
