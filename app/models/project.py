@@ -15,5 +15,5 @@ class Project(Base):
 
     team = relationship("Team", back_populates="projects")
     training_data = relationship("TrainingData", back_populates="project")
-    chats = relationship("Chat", back_populates="project")
     activity_logs = relationship("ActivityLog", back_populates="project")
+    chats = relationship("Chat", back_populates="project")

@@ -4,7 +4,6 @@ from app.models.team_member import TeamMember
 from app.models.invitation import Invitation
 from app.models.user import User
 from app.schemas.team import TeamCreate, TeamInvite
-from app.core.security import get_password_hash
 from app.core.config import settings
 from app.utils.email import send_invitation_email
 from app.services import activity_log_service

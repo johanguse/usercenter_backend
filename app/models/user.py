@@ -20,4 +20,3 @@ class User(Base):
     invitations_sent = relationship("Invitation", back_populates="invited_by")
     activity_logs = relationship("ActivityLog", back_populates="user")
     training_data = relationship("TrainingData", back_populates="user")
-    chats = relationship("Chat", back_populates="user")
