@@ -1,78 +1,59 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List
 
-from app.core.database import get_db
+from app.core.database import get_async_session
 from app.core.security import get_current_active_user
 from app.models.user import User as UserModel
 from app.schemas.project import ProjectCreate, ProjectUpdate, Project, ProjectInDB
-from app.services import project_service, team_service
+from app.services import project_service
 
 router = APIRouter()
 
 @router.post("/", response_model=Project)
-def create_project(
+async def create_project(
     project: ProjectCreate,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_async_session),
     current_user: UserModel = Depends(get_current_active_user)
 ):
-    team = team_service.get_team(db, project.team_id)
-    if not team:
-        raise HTTPException(status_code=404, detail="Team not found")
-    if not team_service.is_team_member(db, team, current_user):
-        raise HTTPException(status_code=403, detail="You don't have permission to create a project for this team")
-    return project_service.create_project(db, project, current_user)
+    return await project_service.create_project(db, project, current_user)
+
+@router.get("/", response_model=List[Project])
+async def get_projects(
+    db: AsyncSession = Depends(get_async_session),
+    current_user: UserModel = Depends(get_current_active_user)
+):
+    return await project_service.get_projects(db, current_user)
 
 @router.get("/{project_id}", response_model=Project)
-def read_project(
+async def get_project(
     project_id: int,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_async_session),
     current_user: UserModel = Depends(get_current_active_user)
 ):
-    project = project_service.get_project(db, project_id)
-    if not project:
+    project = await project_service.get_project(db, project_id, current_user)
+    if project is None:
         raise HTTPException(status_code=404, detail="Project not found")
-    if not team_service.is_team_member(db, project.team, current_user):
-        raise HTTPException(status_code=403, detail="You don't have permission to view this project")
     return project
 
 @router.put("/{project_id}", response_model=Project)
-def update_project(
+async def update_project(
     project_id: int,
     project_update: ProjectUpdate,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_async_session),
     current_user: UserModel = Depends(get_current_active_user)
 ):
-    project = project_service.get_project(db, project_id)
-    if not project:
+    updated_project = await project_service.update_project(db, project_id, project_update, current_user)
+    if updated_project is None:
         raise HTTPException(status_code=404, detail="Project not found")
-    if not team_service.is_team_member(db, project.team, current_user):
-        raise HTTPException(status_code=403, detail="You don't have permission to update this project")
-    return project_service.update_project(db, project, project_update)
+    return updated_project
 
 @router.delete("/{project_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_project(
+async def delete_project(
     project_id: int,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_async_session),
     current_user: UserModel = Depends(get_current_active_user)
 ):
-    project = project_service.get_project(db, project_id)
-    if not project:
+    deleted = await project_service.delete_project(db, project_id, current_user)
+    if not deleted:
         raise HTTPException(status_code=404, detail="Project not found")
-    if not team_service.is_team_admin(db, project.team, current_user):
-        raise HTTPException(status_code=403, detail="You don't have permission to delete this project")
-    project_service.delete_project(db, project)
-    return {"detail": "Project deleted successfully"}
-
-@router.get("/team/{team_id}", response_model=List[Project])
-def list_team_projects(
-    team_id: int,
-    db: Session = Depends(get_db),
-    current_user: UserModel = Depends(get_current_active_user)
-):
-    team = team_service.get_team(db, team_id)
-    if not team:
-        raise HTTPException(status_code=404, detail="Team not found")
-    if not team_service.is_team_member(db, team, current_user):
-        raise HTTPException(status_code=403, detail="You don't have permission to view this team's projects")
-    return project_service.get_team_projects(db, team_id)

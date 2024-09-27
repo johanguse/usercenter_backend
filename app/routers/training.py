@@ -1,72 +1,54 @@
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, status, Request
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.database import get_db
+from app.core.database import get_async_session
 from app.core.security import get_current_active_user
 from app.models.user import User as UserModel
 from app.schemas.training import TrainingDataCreate, TrainingResponse
-from app.services import training_service, project_service, team_service
+from app.services import training_service
 
 router = APIRouter()
 
-@router.post('/upload', response_model=TrainingResponse)
-async def upload_training_data(
-    request: Request,
-    project_id: int,
-    file: UploadFile = File(...),
-    db: Session = Depends(get_db),
-    current_user: UserModel = Depends(get_current_active_user),
+@router.post("/", response_model=TrainingResponse)
+async def create_training_data(
+    training_data: TrainingDataCreate,
+    db: AsyncSession = Depends(get_async_session),
+    current_user: UserModel = Depends(get_current_active_user)
 ):
-    # Get the project
-    project = project_service.get_project(db, project_id)
-    if not project:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
-    
-    # Check if the user is a member of the team that owns the project
-    if not team_service.is_team_member(db, project.team, current_user):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="You don't have permission to upload training data for this project"
-        )
-    
-    # Proceed with upload
-    data = TrainingDataCreate(
-        project_id=project_id,
-        file_name=file.filename,
-        content_type=file.content_type
-    )
-    file_content = await file.read()
-    
-    try:
-        training_data = await training_service.store_training_data(
-            db, data, file_content, current_user, request.client.host
-        )
-        training_service.trigger_training_job(project_id, current_user, request.client.host, db)
-        return TrainingResponse(status='Data uploaded, training job started', file_url=training_data.file_url)
-    except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    return await training_service.create_training_data(db, training_data, current_user)
 
-@router.get('/status/{project_id}', response_model=TrainingResponse)
-async def get_model_status(
-    request: Request,
-    project_id: int,
-    db: Session = Depends(get_db),
-    current_user: UserModel = Depends(get_current_active_user),
+@router.post("/upload", response_model=TrainingResponse)
+async def upload_training_data(
+    file: UploadFile = File(...),
+    db: AsyncSession = Depends(get_async_session),
+    current_user: UserModel = Depends(get_current_active_user)
 ):
-    # Get the project
-    project = project_service.get_project(db, project_id)
-    if not project:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
-    
-    # Check if the user is a member of the team that owns the project
-    if not team_service.is_team_member(db, project.team, current_user):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="You don't have permission to access this project's training data"
-        )
-    
-    try:
-        status, file_url = await training_service.get_model_status(db, project_id, current_user, request.client.host)
-        return TrainingResponse(status=status, file_url=file_url)
-    except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    return await training_service.upload_training_data(db, file, current_user)
+
+@router.get("/", response_model=list[TrainingResponse])
+async def get_training_data(
+    db: AsyncSession = Depends(get_async_session),
+    current_user: UserModel = Depends(get_current_active_user)
+):
+    return await training_service.get_training_data(db, current_user)
+
+@router.get("/{training_id}", response_model=TrainingResponse)
+async def get_training_data_by_id(
+    training_id: int,
+    db: AsyncSession = Depends(get_async_session),
+    current_user: UserModel = Depends(get_current_active_user)
+):
+    training_data = await training_service.get_training_data_by_id(db, training_id, current_user)
+    if training_data is None:
+        raise HTTPException(status_code=404, detail="Training data not found")
+    return training_data
+
+@router.delete("/{training_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_training_data(
+    training_id: int,
+    db: AsyncSession = Depends(get_async_session),
+    current_user: UserModel = Depends(get_current_active_user)
+):
+    deleted = await training_service.delete_training_data(db, training_id, current_user)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Training data not found")

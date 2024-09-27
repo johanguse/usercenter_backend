@@ -5,10 +5,10 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from passlib.context import CryptContext
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
-from app.core.database import get_db
+from app.core.database import get_async_session
 from app.models.user import User
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
@@ -30,7 +30,7 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
     return encoded_jwt
 
-def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+async def get_current_user(token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_async_session)):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -43,27 +43,13 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
             raise credentials_exception
     except JWTError:
         raise credentials_exception
-    user = db.query(User).filter(User.email == username).first()
+    user = await db.execute(select(User).filter(User.email == username))
+    user = user.scalar_one_or_none()
     if user is None:
         raise credentials_exception
     return user
 
-def get_current_active_user(current_user: User = Depends(get_current_user)):
+async def get_current_active_user(current_user: User = Depends(get_current_user)):
     if not current_user.is_active:
         raise HTTPException(status_code=400, detail="Inactive user")
     return current_user
-
-async def authenticate_request(request, call_next):
-    if request.url.path.startswith('/api'):
-        token = request.headers.get('Authorization')
-        if not token:
-            raise HTTPException(
-                status_code=401, detail='Authorization header missing'
-            )
-        try:
-            user = verify_token(token.split()[1], next(get_db()))
-            request.state.user = user
-        except HTTPException:
-            raise HTTPException(status_code=401, detail='Invalid token')
-    response = await call_next(request)
-    return response

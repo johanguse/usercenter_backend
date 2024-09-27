@@ -1,23 +1,19 @@
 import logging
 
-from fastapi import Depends, FastAPI, HTTPException, Request
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
 from fastapi_pagination import add_pagination
-from sqlalchemy import text
-from sqlalchemy.orm import Session
 
 from app.core.config import settings
-from app.core.database import Base, engine, get_db
+from app.core.database import Base, engine
 from app.routers import user, team, project, training
+from app.core.openapi import custom_openapi
 
 app = FastAPI(title='AI Chat SaaS API', version='1.0.0')
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-app = FastAPI(title=settings.PROJECT_NAME)
 
 app.add_middleware(
     CORSMiddleware,
@@ -29,36 +25,15 @@ app.add_middleware(
 
 add_pagination(app)
 
-Base.metadata.create_all(bind=engine)
-
-app.include_router(user.router, prefix=f"{settings.API_V1_STR}/users", tags=["users"])
+app.include_router(user.router, prefix=settings.API_V1_STR)
 app.include_router(team.router, prefix=f"{settings.API_V1_STR}/teams", tags=["teams"])
 app.include_router(project.router, prefix=f"{settings.API_V1_STR}/projects", tags=["projects"])
 app.include_router(training.router, prefix=f"{settings.API_V1_STR}/training", tags=["training"])
 
-@app.exception_handler(HTTPException)
-async def http_exception_handler(request, exc):
-    logger.error(f'HTTP error occurred: {exc.detail}')
-    return {'detail': exc.detail}
+app.openapi = lambda: custom_openapi(app)
 
-@app.get('/health')
-async def health_check(db: Session = Depends(get_db)):
-    try:
-        result = db.execute(text('SELECT 1'))
-        result.scalar()
-        return {'status': 'healthy', 'database': 'connected'}
-    except Exception as e:
-        return {
-            'status': 'unhealthy',
-            'database': 'disconnected',
-            'error': str(e),
-        }
-
-
-@app.exception_handler(Exception)
-async def global_exception_handler(request: Request, exc: Exception):
-    logger.error(f'Global exception: {str(exc)}')
-    return JSONResponse(
-        status_code=500, content={'message': 'An unexpected error occurred.'}
-    )
-
+@app.on_event("startup")
+async def startup():
+    # Create database tables
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)

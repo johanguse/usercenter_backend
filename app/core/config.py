@@ -18,6 +18,9 @@ class Settings(BaseSettings):
     DEFAULT_PAGE_SIZE: int = os.getenv('DEFAULT_PAGE_SIZE', '30')
 
     SECRET_KEY: str = os.getenv('SECRET_KEY')
+    JWT_SECRET: str = os.getenv("JWT_SECRET", "your-secret-key")
+    JWT_LIFETIME_SECONDS: int = int(os.getenv("JWT_LIFETIME_SECONDS", 3600))
+
     ALGORITHM: str = os.getenv('ALGORITHM', 'HS256')
     ACCESS_TOKEN_EXPIRE_MINUTES: int = int(
         os.getenv('ACCESS_TOKEN_EXPIRE_MINUTES', '30')
