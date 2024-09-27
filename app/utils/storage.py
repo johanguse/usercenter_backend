@@ -1,6 +1,8 @@
 import boto3
 from botocore.exceptions import ClientError
+
 from app.core.config import settings
+
 
 def get_r2_client():
     return boto3.client(
@@ -9,6 +11,7 @@ def get_r2_client():
         aws_access_key_id=settings.R2_ACCESS_KEY_ID,
         aws_secret_access_key=settings.R2_SECRET_ACCESS_KEY
     )
+
 
 def upload_file_to_r2(file_content: bytes, file_name: str, content_type: str):
     client = get_r2_client()

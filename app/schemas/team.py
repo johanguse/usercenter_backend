@@ -1,20 +1,26 @@
-from pydantic import BaseModel, EmailStr
-from typing import List, Optional
 from datetime import datetime
+from typing import List, Optional
+
+from pydantic import BaseModel, EmailStr
+
 
 class TeamBase(BaseModel):
     name: str
 
+
 class TeamCreate(TeamBase):
     pass
+
 
 class TeamInvite(BaseModel):
     email: EmailStr
     role: str
 
+
 class TeamMemberBase(BaseModel):
     user_id: int
     role: str
+
 
 class TeamMemberResponse(TeamMemberBase):
     email: EmailStr
@@ -23,6 +29,7 @@ class TeamMemberResponse(TeamMemberBase):
 
     class Config:
         from_attributes = True
+
 
 class TeamResponse(TeamBase):
     id: int

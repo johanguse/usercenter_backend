@@ -1,14 +1,20 @@
+from typing import List
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from typing import List
 
 from app.core.database import get_async_session
 from app.core.security import get_current_active_user
 from app.models.user import User as UserModel
-from app.schemas.project import ProjectCreate, ProjectUpdate, Project, ProjectInDB
+from app.schemas.project import (
+    Project,
+    ProjectCreate,
+    ProjectUpdate,
+)
 from app.services import project_service
 
 router = APIRouter()
+
 
 @router.post("/", response_model=Project)
 async def create_project(
@@ -18,12 +24,14 @@ async def create_project(
 ):
     return await project_service.create_project(db, project, current_user)
 
+
 @router.get("/", response_model=List[Project])
 async def get_projects(
     db: AsyncSession = Depends(get_async_session),
     current_user: UserModel = Depends(get_current_active_user)
 ):
     return await project_service.get_projects(db, current_user)
+
 
 @router.get("/{project_id}", response_model=Project)
 async def get_project(
@@ -36,6 +44,7 @@ async def get_project(
         raise HTTPException(status_code=404, detail="Project not found")
     return project
 
+
 @router.put("/{project_id}", response_model=Project)
 async def update_project(
     project_id: int,
@@ -47,6 +56,7 @@ async def update_project(
     if updated_project is None:
         raise HTTPException(status_code=404, detail="Project not found")
     return updated_project
+
 
 @router.delete("/{project_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_project(

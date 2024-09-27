@@ -1,8 +1,10 @@
 from fastapi_users.db import SQLAlchemyBaseUserTable
-from sqlalchemy import Column, String, DateTime, Boolean, Integer
+from sqlalchemy import Boolean, Column, DateTime, Integer, String
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
+
 from app.core.database import Base
+
 
 class User(SQLAlchemyBaseUserTable[int], Base):
     __tablename__ = 'users'

@@ -6,8 +6,8 @@ from fastapi_pagination import add_pagination
 
 from app.core.config import settings
 from app.core.database import Base, engine
-from app.routers import user, team, project, training
 from app.core.openapi import custom_openapi
+from app.routers import project, team, training, user
 
 app = FastAPI(title='AI Chat SaaS API', version='1.0.0')
 
@@ -31,6 +31,7 @@ app.include_router(project.router, prefix=f"{settings.API_V1_STR}/projects", tag
 app.include_router(training.router, prefix=f"{settings.API_V1_STR}/training", tags=["training"])
 
 app.openapi = lambda: custom_openapi(app)
+
 
 @app.on_event("startup")
 async def startup():

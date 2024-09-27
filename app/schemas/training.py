@@ -1,12 +1,15 @@
-from typing import List, Dict
 from datetime import datetime
+
 from pydantic import BaseModel
+
 from app.models.training import ModelStatus
+
 
 class TrainingDataCreate(BaseModel):
     project_id: int
     file_name: str
     content_type: str
+
 
 class TrainingDataInDB(BaseModel):
     id: int
@@ -18,6 +21,7 @@ class TrainingDataInDB(BaseModel):
 
     class Config:
         from_attributes = True
+
 
 class TrainingResponse(BaseModel):
     status: str

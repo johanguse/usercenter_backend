@@ -1,13 +1,25 @@
-from sqlalchemy import Column, DateTime, Enum, Integer, ForeignKey, JSON, String
+import enum
+
+from sqlalchemy import (
+    JSON,
+    Column,
+    DateTime,
+    Enum,
+    ForeignKey,
+    Integer,
+    String,
+)
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
+
 from app.core.database import Base
-import enum
+
 
 class ModelStatus(enum.Enum):
     TRAINING = 'training'
     COMPLETED = 'completed'
     FAILED = 'failed'
+
 
 class TrainingData(Base):
     __tablename__ = 'training_data'
