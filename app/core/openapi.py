@@ -8,18 +8,18 @@ def custom_openapi(app):
         return app.openapi_schema
 
     openapi_schema = get_openapi(
-        title="AI Chat SaaS API",
-        version="1.0.0",
-        description="API for AI Chat SaaS application",
+        title='AI Chat SaaS API',
+        version='1.0.0',
+        description='API for AI Chat SaaS application',
         routes=app.routes,
     )
 
-    openapi_schema["components"]["securitySchemes"] = {
-        "JWT": {
-            "type": "oauth2",
-            "flows": {
-                "password": {
-                    "tokenUrl": f"{settings.API_V1_STR}/auth/jwt/login"
+    openapi_schema['components']['securitySchemes'] = {
+        'JWT': {
+            'type': 'oauth2',
+            'flows': {
+                'password': {
+                    'tokenUrl': f'{settings.API_V1_STR}/auth/jwt/login'
                 }
             },
         }

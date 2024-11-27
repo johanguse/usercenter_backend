@@ -10,7 +10,7 @@ class UserRead(schemas.BaseUser[int]):
 
 class UserCreate(schemas.BaseUserCreate):
     name: Optional[str] = None
-    role: str = "member"
+    role: str = 'member'
 
 
 class UserUpdate(schemas.BaseUserUpdate):

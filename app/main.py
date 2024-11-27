@@ -20,11 +20,11 @@ async def lifespan(app: FastAPI):
     # Startup
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
-    logger.info("Database tables created")
+    logger.info('Database tables created')
     yield
     # Shutdown
     # Add any cleanup operations here if needed
-    logger.info("Application shutting down")
+    logger.info('Application shutting down')
 
 
 app = FastAPI(title='AI Chat SaaS API', version='1.0.0', lifespan=lifespan)
@@ -40,8 +40,16 @@ app.add_middleware(
 add_pagination(app)
 
 app.include_router(user.router, prefix=settings.API_V1_STR)
-app.include_router(team.router, prefix=f"{settings.API_V1_STR}/teams", tags=["teams"])
-app.include_router(project.router, prefix=f"{settings.API_V1_STR}/projects", tags=["projects"])
-app.include_router(training.router, prefix=f"{settings.API_V1_STR}/training", tags=["training"])
+app.include_router(
+    team.router, prefix=f'{settings.API_V1_STR}/teams', tags=['teams']
+)
+app.include_router(
+    project.router, prefix=f'{settings.API_V1_STR}/projects', tags=['projects']
+)
+app.include_router(
+    training.router,
+    prefix=f'{settings.API_V1_STR}/training',
+    tags=['training'],
+)
 
 app.openapi = lambda: custom_openapi(app)

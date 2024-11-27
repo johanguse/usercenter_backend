@@ -13,9 +13,11 @@ class ActivityLog(Base):
     user_id = Column(Integer, ForeignKey('users.id'))
     team_id = Column(Integer, ForeignKey('teams.id'), nullable=False)
     action = Column(Text, nullable=False)
-    timestamp = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    timestamp = Column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
     ip_address = Column(String(45))
 
-    project = relationship("Project", back_populates="activity_logs")
-    user = relationship("User", back_populates="activity_logs")
-    team = relationship("Team", back_populates="activity_logs")
+    project = relationship('Project', back_populates='activity_logs')
+    user = relationship('User', back_populates='activity_logs')
+    team = relationship('Team', back_populates='activity_logs')

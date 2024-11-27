@@ -18,8 +18,8 @@ class Settings(BaseSettings):
     DEFAULT_PAGE_SIZE: int = os.getenv('DEFAULT_PAGE_SIZE', '30')
 
     SECRET_KEY: str = os.getenv('SECRET_KEY')
-    JWT_SECRET: str = os.getenv("JWT_SECRET", "your-secret-key")
-    JWT_LIFETIME_SECONDS: int = int(os.getenv("JWT_LIFETIME_SECONDS", 3600))
+    JWT_SECRET: str = os.getenv('JWT_SECRET', 'your-secret-key')
+    JWT_LIFETIME_SECONDS: int = int(os.getenv('JWT_LIFETIME_SECONDS', '3600'))
 
     ALGORITHM: str = os.getenv('ALGORITHM', 'HS256')
     ACCESS_TOKEN_EXPIRE_MINUTES: int = int(
@@ -30,7 +30,12 @@ class Settings(BaseSettings):
     )
 
     FRONTEND_URL: str = os.getenv('FRONTEND_URL', 'http://localhost:3000')
-    ALLOWED_ORIGINS: list = [FRONTEND_URL]
+    ALLOWED_ORIGINS: list[str] = [
+        FRONTEND_URL,
+        'http://localhost:5173',
+        'http://127.0.0.1:5173',
+        # Add any other origins you need
+    ]
 
     DATABASE_URL: Union[str, PostgresDsn]
 

@@ -12,7 +12,9 @@ class TeamMember(Base):
     user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
     team_id = Column(Integer, ForeignKey('teams.id'), nullable=False)
     role = Column(String(50), nullable=False)
-    joined_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    joined_at = Column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
 
-    user = relationship("User", back_populates="team_members")
-    team = relationship("Team", back_populates="team_members")
+    user = relationship('User', back_populates='team_members')
+    team = relationship('Team', back_populates='team_members')

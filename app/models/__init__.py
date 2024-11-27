@@ -1,13 +1,23 @@
-from app.core.database import Base as Base
+from app.core.database import Base
 
-from .activity_log import ActivityLog as ActivityLog
-from .chat import Chat as Chat
-from .invitation import Invitation as Invitation
-from .project import Project as Project
-from .team import Team as Team
-from .team_member import TeamMember as TeamMember
-from .training import ModelStatus as ModelStatus
-from .training import TrainingData as TrainingData
+from .activity_log import ActivityLog
+from .chat import Chat
+from .invitation import Invitation
+from .project import Project
+from .team import Team
+from .team_member import TeamMember
+from .training import ModelStatus, TrainingData
+from .user import User
 
-# Import all models
-from .user import User as User
+__all__ = [
+    'Base',
+    'ActivityLog',
+    'Chat',
+    'Invitation',
+    'Project',
+    'Team',
+    'TeamMember',
+    'ModelStatus',
+    'TrainingData',
+    'User',
+]

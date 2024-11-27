@@ -4,11 +4,13 @@ import resend
 
 from app.core.config import settings
 
-resend.api_key = os.environ["RESEND_API_KEY"]
+resend.api_key = os.environ['RESEND_API_KEY']
 
 
-def send_invitation_email(to_email: str, from_email: str, team_name: str, frontend_url: str):
-    subject = f"Invitation to join {team_name} on Our Platform"
+def send_invitation_email(
+    to_email: str, from_email: str, team_name: str, frontend_url: str
+):
+    subject = f'Invitation to join {team_name} on Our Platform'
     body = f"""
     Hello,
 
@@ -25,13 +27,15 @@ def send_invitation_email(to_email: str, from_email: str, team_name: str, fronte
 
     try:
         params = {
-            "from": settings.RESEND_FROM_EMAIL,
-            "to": to_email,
-            "subject": subject,
-            "html": body,
+            'from': settings.RESEND_FROM_EMAIL,
+            'to': to_email,
+            'subject': subject,
+            'html': body,
         }
 
         email = resend.emails.send(params)
-        print(f"Invitation email sent successfully to {to_email}. Email ID: {email.id}")
+        print(
+            f'Invitation email sent successfully to {to_email}. Email ID: {email.id}'
+        )
     except Exception as e:
-        print(f"Failed to send invitation email: {str(e)}")
+        print(f'Failed to send invitation email: {str(e)}')

@@ -12,6 +12,8 @@ class Chat(Base):
     project_id = Column(Integer, ForeignKey('projects.id'), nullable=False)
     sender_name = Column(String(100), nullable=False)  # Instead of user_id
     message = Column(Text, nullable=False)
-    timestamp = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    timestamp = Column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
 
-    project = relationship("Project", back_populates="chats")
+    project = relationship('Project', back_populates='chats')

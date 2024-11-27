@@ -18,11 +18,18 @@ class User(SQLAlchemyBaseUserTable[int], Base):
 
     name = Column(String(100))
     role = Column(String(20), nullable=False, default='member')
-    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
-    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+    created_at = Column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+    updated_at = Column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
+        nullable=False,
+    )
     deleted_at = Column(DateTime(timezone=True))
 
-    team_members = relationship("TeamMember", back_populates="user")
-    invitations_sent = relationship("Invitation", back_populates="invited_by")
-    activity_logs = relationship("ActivityLog", back_populates="user")
-    training_data = relationship("TrainingData", back_populates="user")
+    team_members = relationship('TeamMember', back_populates='user')
+    invitations_sent = relationship('Invitation', back_populates='invited_by')
+    activity_logs = relationship('ActivityLog', back_populates='user')
+    training_data = relationship('TrainingData', back_populates='user')

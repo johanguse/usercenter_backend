@@ -32,5 +32,7 @@ async def get_model_status(
     db: Session = Depends(get_db),
     current_user: UserModel = Depends(get_current_active_user),
 ):
-    status = await training_service.get_model_status(db, current_user.id, bot_id)
+    status = await training_service.get_model_status(
+        db, current_user.id, bot_id
+    )
     return TrainingResponse(status=status)

@@ -12,10 +12,17 @@ class Project(Base):
     name = Column(String(100), nullable=False)
     description = Column(Text)
     team_id = Column(Integer, ForeignKey('teams.id'), nullable=False)
-    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
-    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+    created_at = Column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+    updated_at = Column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
+        nullable=False,
+    )
 
-    team = relationship("Team", back_populates="projects")
-    training_data = relationship("TrainingData", back_populates="project")
-    activity_logs = relationship("ActivityLog", back_populates="project")
-    chats = relationship("Chat", back_populates="project")
+    team = relationship('Team', back_populates='projects')
+    training_data = relationship('TrainingData', back_populates='project')
+    activity_logs = relationship('ActivityLog', back_populates='project')
+    chats = relationship('Chat', back_populates='project')

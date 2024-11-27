@@ -23,21 +23,36 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
     reset_password_token_secret = settings.SECRET_KEY
     verification_token_secret = settings.SECRET_KEY
 
-    async def on_after_register(self, user: User, request: Optional[Request] = None):
-        print(f"User {user.id} has registered.")
+    @staticmethod
+    async def on_after_register(user: User, request: Optional[Request] = None):
+        print(f'User {user.id} has registered.')
 
-    async def on_after_forgot_password(self, user: User, token: str, request: Optional[Request] = None):
-        print(f"User {user.id} has forgot their password. Reset token: {token}")
+    @staticmethod
+    async def on_after_forgot_password(
+        user: User, token: str, request: Optional[Request] = None
+    ):
+        print(
+            f'User {user.id} has forgot their password. Reset token: {token}'
+        )
 
-    async def on_after_request_verify(self, user: User, token: str, request: Optional[Request] = None):
-        print(f"Verification requested for user {user.id}. Verification token: {token}")
+    @staticmethod
+    async def on_after_request_verify(
+        user: User, token: str, request: Optional[Request] = None
+    ):
+        print(
+            f'Verification requested for user {user.id}. Verification token: {token}'
+        )
 
 
-async def get_user_manager(user_db: SQLAlchemyUserDatabase = Depends(get_user_db)):
+async def get_user_manager(
+    user_db: SQLAlchemyUserDatabase = Depends(get_user_db),
+):
     yield UserManager(user_db)
 
 
-bearer_transport = BearerTransport(tokenUrl=f"{settings.API_V1_STR}/auth/jwt/login")
+bearer_transport = BearerTransport(
+    tokenUrl=f'{settings.API_V1_STR}/auth/jwt/login'
+)
 
 
 def get_jwt_strategy() -> JWTStrategy:
@@ -45,13 +60,13 @@ def get_jwt_strategy() -> JWTStrategy:
 
 
 auth_backend = AuthenticationBackend(
-    name="jwt",
+    name='jwt',
     transport=bearer_transport,
     get_strategy=get_jwt_strategy,
 )
 
 # Add this line to set a custom scheme name
-auth_backend.name = "JWT"
+auth_backend.name = 'JWT'
 
 fastapi_users = FastAPIUsers[User, int](get_user_manager, [auth_backend])
 

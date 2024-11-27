@@ -17,7 +17,9 @@ def get_project(db: Session, project_id: int):
     return db.query(Project).filter(Project.id == project_id).first()
 
 
-def update_project(db: Session, project: Project, project_update: ProjectUpdate):
+def update_project(
+    db: Session, project: Project, project_update: ProjectUpdate
+):
     for key, value in project_update.dict(exclude_unset=True).items():
         setattr(project, key, value)
     db.add(project)
